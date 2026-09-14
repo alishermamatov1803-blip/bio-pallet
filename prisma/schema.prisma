@@ -1,0 +1,131 @@
+// BIO PALLET CRM — ma'lumotlar bazasi sxemasi
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  WAREHOUSE
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  fullName  String
+  email     String   @unique
+  password  String
+  role      Role     @default(MANAGER)
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Client {
+  id        Int      @id @default(autoincrement())
+  name      String
+  company   String?
+  phone     String
+  email     String?
+  address   String?
+  inn       String? // STIR / soliq raqami
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+enum ProductType {
+  PALLET
+  MATERIAL
+  SERVICE
+}
+
+model Product {
+  id          Int             @id @default(autoincrement())
+  name        String
+  type        ProductType     @default(PALLET)
+  sku         String?         @unique
+  unit        String          @default("dona") // dona, m3, kg ...
+  price       Float           @default(0)
+  quantity    Float           @default(0) // ombordagi joriy qoldiq
+  minQuantity Float           @default(0) // minimal zaxira chegarasi
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  orderItems  OrderItem[]
+  movements   StockMovement[]
+}
+
+enum OrderStatus {
+  NEW
+  CONFIRMED
+  IN_PRODUCTION
+  READY
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  number      String      @unique
+  client      Client      @relation(fields: [clientId], references: [id])
+  clientId    Int
+  manager     User?       @relation(fields: [managerId], references: [id])
+  managerId   Int?
+  status      OrderStatus @default(NEW)
+  items       OrderItem[]
+  payments    Payment[]
+  totalAmount Float       @default(0)
+  paidAmount  Float       @default(0)
+  dueDate     DateTime?
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Float
+  price     Float
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+}
+
+model Payment {
+  id      Int           @id @default(autoincrement())
+  order   Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId Int
+  amount  Float
+  method  PaymentMethod @default(CASH)
+  paidAt  DateTime      @default(now())
+  notes   String?
+}
+
+enum MovementType {
+  IN
+  OUT
+}
+
+model StockMovement {
+  id        Int          @id @default(autoincrement())
+  product   Product      @relation(fields: [productId], references: [id])
+  productId Int
+  type      MovementType
+  quantity  Float
+  reason    String?
+  createdAt DateTime     @default(now())
+}
