@@ -10,6 +10,8 @@ type Company = {
   odataPassword: string | null;
   odataEntitySet: string | null;
   odataFieldMap: string | null;
+  gtdEntitySet: string | null;
+  gtdFieldMap: string | null;
 };
 
 const DEFAULT_MAP: Record<string, string> = {
@@ -50,6 +52,7 @@ export default function FirmSettingsPage({
   const [password, setPassword] = useState("");
   const [entitySet, setEntitySet] = useState("");
   const [fieldMap, setFieldMap] = useState<Record<string, string>>(DEFAULT_MAP);
+  const [gtdEntitySet, setGtdEntitySet] = useState("");
   const [entities, setEntities] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -69,6 +72,7 @@ export default function FirmSettingsPage({
       setPassword(c.odataPassword || "");
       setEntitySet(c.odataEntitySet || "");
       setFieldMap(c.odataFieldMap ? { ...DEFAULT_MAP, ...JSON.parse(c.odataFieldMap) } : DEFAULT_MAP);
+      setGtdEntitySet(c.gtdEntitySet || "");
       setLoading(false);
     }
     void load();
@@ -87,6 +91,7 @@ export default function FirmSettingsPage({
         odataPassword: password || null,
         odataEntitySet: entitySet || null,
         odataFieldMap: JSON.stringify(fieldMap),
+        gtdEntitySet: gtdEntitySet || null,
       }),
     });
     setSaving(false);
@@ -210,6 +215,34 @@ export default function FirmSettingsPage({
             value={entitySet}
             onChange={(e) => setEntitySet(e.target.value)}
             placeholder="masalan: Document_ПоступлениеНаРасчетныйСчет"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          />
+        )}
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="mb-1 text-sm font-semibold text-slate-900">GTD uchun hujjat turi (Entity Set)</h3>
+        <p className="mb-3 text-xs text-slate-500">
+          Bojxona deklaratsiyalari qaysi 1C hujjatiga yozilishi kerakligini tanlang
+        </p>
+        {entities.length > 0 ? (
+          <select
+            value={gtdEntitySet}
+            onChange={(e) => setGtdEntitySet(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          >
+            <option value="">— tanlang —</option>
+            {entities.map((e) => (
+              <option key={e} value={e}>
+                {e}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            value={gtdEntitySet}
+            onChange={(e) => setGtdEntitySet(e.target.value)}
+            placeholder="masalan: Document_ГТДИмпорт"
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
           />
         )}

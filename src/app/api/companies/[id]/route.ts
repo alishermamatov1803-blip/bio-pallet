@@ -41,6 +41,8 @@ export async function PUT(
       odataPassword: body.odataPassword ?? null,
       odataEntitySet: body.odataEntitySet ?? null,
       odataFieldMap: body.odataFieldMap ?? null,
+      gtdEntitySet: body.gtdEntitySet ?? null,
+      gtdFieldMap: body.gtdFieldMap ?? null,
     },
   });
 

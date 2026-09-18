@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const TABS = [
   { href: "", label: "Bank vypiskalari" },
+  { href: "/gtd", label: "GTD (bojxona)" },
   { href: "/sozlamalar", label: "1C ulanish sozlamalari" },
 ];
 
@@ -17,7 +18,7 @@ export default function FirmTabs({ companyId }: { companyId: number }) {
       <nav className="-mb-px flex gap-4">
         {TABS.map((tab) => {
           const href = `${base}${tab.href}`;
-          const active = pathname === href;
+          const active = tab.href === "" ? pathname === href : pathname.startsWith(href);
           return (
             <Link
               key={tab.href}

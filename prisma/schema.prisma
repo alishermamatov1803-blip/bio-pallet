@@ -29,11 +29,16 @@ model Company {
   odataEntitySet String? // masalan: Document_ПоступлениеНаРасчетныйСчет
   odataFieldMap  String? // JSON: { "bizNingUstun": "1cMaydon" }
 
+  // GTD (bojxona deklaratsiyasi) uchun alohida 1C hujjat turi/moslashuv
+  gtdEntitySet String?
+  gtdFieldMap  String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   bankStatementImports BankStatementImport[]
   bankStatementLines   BankStatementLine[]
+  gtdDeclarations      GtdDeclaration[]
 }
 
 model BankStatementImport {
@@ -75,6 +80,57 @@ model BankStatementLine {
 
   @@index([companyId, date])
   @@index([importId])
+}
+
+// GTD — Grузовая тamojennaya deklaratsiya (bojxona deklaratsiyasi, PDF)
+model GtdDeclaration {
+  id                Int      @id @default(autoincrement())
+  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId         Int
+  fileName          String
+  fileData          Bytes // asl PDF fayl (ko'rish/eksport uchun)
+  declarationNumber String? // masalan 00102/01.08.2026/0053185
+  declarationDate   DateTime?
+  senderName        String? // Отправитель/экспортер
+  receiverName      String? // Получатель/импортер
+  receiverInn       String?
+  brokerName        String? // Декларант/представитель
+  originCountry     String?
+  destinationCountry String?
+  deliveryTerms     String? // Условия поставки
+  currencyCode      String?
+  invoiceTotal      Float?
+  exchangeRate      Float?
+  weightBrutto      Float?
+  weightNetto       Float?
+  customsValue      Float? // Статистическая стоимость
+  dutyTotal         Float? // Исчисленные таможенные пошлины и сборы
+  notes             String?
+  exportedAt        DateTime?
+  odataId           String?
+  odataError        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  items GtdItem[]
+
+  @@index([companyId])
+}
+
+model GtdItem {
+  id           Int            @id @default(autoincrement())
+  gtd          GtdDeclaration @relation(fields: [gtdId], references: [id], onDelete: Cascade)
+  gtdId        Int
+  itemNo       Int?
+  description  String
+  hsCode       String? // Код товара (ТН ВЭД)
+  originCountryCode String?
+  quantity     Float?
+  unit         String?
+  weightNetto  Float?
+  invoiceValue Float?
+
+  @@index([gtdId])
 }
 
 model User {
