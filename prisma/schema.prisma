@@ -15,6 +15,68 @@ enum Role {
   WAREHOUSE
 }
 
+// Har bir firma uchun alohida kabinet (multi-tenant)
+model Company {
+  id       Int    @id @default(autoincrement())
+  name     String
+  inn      String? // STIR
+  address  String?
+
+  // 1C OData ulanish sozlamalari
+  odataBaseUrl   String?
+  odataUsername  String?
+  odataPassword  String?
+  odataEntitySet String? // masalan: Document_ПоступлениеНаРасчетныйСчет
+  odataFieldMap  String? // JSON: { "bizNingUstun": "1cMaydon" }
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bankStatementImports BankStatementImport[]
+  bankStatementLines   BankStatementLine[]
+}
+
+model BankStatementImport {
+  id             Int      @id @default(autoincrement())
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId      Int
+  fileName       String
+  accountNumber  String?
+  accountHolder  String?
+  periodLabel    String?
+  openingBalance Float?
+  closingBalance Float?
+  rowCount       Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  lines BankStatementLine[]
+}
+
+model BankStatementLine {
+  id            Int                  @id @default(autoincrement())
+  company       Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId     Int
+  import        BankStatementImport  @relation(fields: [importId], references: [id], onDelete: Cascade)
+  importId      Int
+  date          DateTime
+  account       String
+  accountName   String?
+  docNumber     String?
+  vo            String?
+  mfo           String?
+  debit         Float                @default(0)
+  credit        Float                @default(0)
+  purpose       String?
+  kasSmv        String?
+  exportedAt    DateTime?
+  odataId       String?
+  odataError    String?
+  createdAt     DateTime             @default(now())
+
+  @@index([companyId, date])
+  @@index([importId])
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   fullName  String
