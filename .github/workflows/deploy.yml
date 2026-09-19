@@ -1,0 +1,51 @@
+name: Deploy to Windows server
+
+on:
+  push:
+    branches:
+      - main
+      - "claude/**"
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Manba kodni arxivlash
+        run: git archive --format=zip -o bio-pallet.zip HEAD
+
+      - name: sshpass o'rnatish
+        run: sudo apt-get update -y && sudo apt-get install -y sshpass
+
+      - name: Serverda deploy papkasini tayyorlash
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+        run: |
+          sshpass -p "$SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 \
+            "$SERVER_USER@$SERVER_HOST" \
+            "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force -Path C:\\deploy | Out-Null\""
+
+      - name: Fayllarni serverga yuborish
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+        run: |
+          sshpass -p "$SERVER_PASSWORD" scp -o StrictHostKeyChecking=no \
+            bio-pallet.zip "$SERVER_USER@$SERVER_HOST:C:/deploy/bio-pallet.zip"
+          sshpass -p "$SERVER_PASSWORD" scp -o StrictHostKeyChecking=no \
+            scripts/deploy-windows.ps1 "$SERVER_USER@$SERVER_HOST:C:/deploy/deploy-windows.ps1"
+
+      - name: Serverda deploy skriptini ishga tushirish
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+        run: |
+          sshpass -p "$SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 \
+            "$SERVER_USER@$SERVER_HOST" \
+            "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\deploy\\deploy-windows.ps1"
