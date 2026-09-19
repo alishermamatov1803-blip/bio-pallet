@@ -1,11 +1,11 @@
 # BIO PALLET CRM — Windows Server deploy skripti
-# Bu skript GitHub Actions tomonidan serverga yuklab, SSH orqali ishga tushiriladi.
+# C:\deploy ichida bio-pallet.zip bilan birga joylashtirib, PowerShell'da ishga tushiring.
 $ErrorActionPreference = "Stop"
 
 $AppDir = "C:\apps\bio-pallet"
 $ZipPath = "C:\deploy\bio-pallet.zip"
 $TaskName = "BioPalletApp"
-$Port = 3000
+$Port = 8088
 
 function Resolve-Cmd($name, $hint) {
     $cmd = Get-Command $name -ErrorAction SilentlyContinue
@@ -62,7 +62,7 @@ if (-not (Get-NetFirewallRule -DisplayName "BioPalletApp$Port" -ErrorAction Sile
 }
 
 Write-Host "== Scheduled Task sozlash =="
-$action = "cmd.exe /c cd /d `"$AppDir`" && `"$npmCmd`" run start"
+$action = "cmd.exe /c cd /d `"$AppDir`" && `"$npmCmd`" run start -- -p $Port"
 $existing = schtasks /Query /TN $TaskName 2>$null
 if (-not $existing) {
     schtasks /Create /TN $TaskName /TR $action /SC ONSTART /RU SYSTEM /RL HIGHEST /F | Out-Null
